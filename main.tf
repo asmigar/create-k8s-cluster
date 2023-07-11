@@ -59,8 +59,8 @@ resource "aws_key_pair" "webserver" {
 }
 
 resource "aws_instance" "master" {
-  ami           = "ami-022e1a32d3f742bd8"
-  instance_type = "t2.micro"
+  ami           = "ami-0006abfd85caddf82"
+  instance_type = "t4g.small"
 
   tags = {
     Name = "master"
