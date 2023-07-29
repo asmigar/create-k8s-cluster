@@ -9,6 +9,10 @@ provider "aws" {
   }
 }
 
+data "http" "my_public_ip" {
+  url = "https://ifconfig.me"
+}
+
 resource "aws_security_group" "allow_ssh" {
   name        = "allow_tls"
   description = "Allow TLS inbound traffic"
@@ -19,8 +23,7 @@ resource "aws_security_group" "allow_ssh" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    cidr_blocks      = ["${data.http.my_public_ip.response_body}/32"]
   }
 
   ingress {
@@ -58,20 +61,20 @@ resource "aws_security_group" "allow_ssh" {
 resource "tls_private_key" "this" {
   algorithm = "RSA"
   rsa_bits  = 4096
-
-  provisioner "local-exec" {
-    command = "echo '${self.private_key_openssh}' > ~/.ssh/${var.shh_key_name}.pem; chmod 400 ~/.ssh/docker_swarm.pem"
-  }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf ~/.ssh/${var.shh_key_name}.pem"
-  }
 }
 
 resource "aws_key_pair" "this" {
   key_name   = var.shh_key_name
   public_key = tls_private_key.this.public_key_openssh
+
+  provisioner "local-exec" {
+    command = "echo '${tls_private_key.this.private_key_openssh}' > ~/.ssh/${var.shh_key_name}.pem; chmod 400 ~/.ssh/${self.key_name}.pem"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -rf ~/.ssh/${self.key_name}.pem"
+  }
 }
 
 resource "aws_instance" "master" {
