@@ -24,21 +24,21 @@ resource "aws_security_group" "allow_ssh" {
   }
 
   ingress {
-    description      = "kubelet api"
-    from_port        = 10250
-    to_port          = 10250
-    protocol         = "tcp"
-    cidr_blocks      = [aws_subnet.public.cidr_block]
+    description = "kubelet api"
+    from_port   = 10250
+    to_port     = 10250
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.public.cidr_block]
   }
 
   ingress {
-    description      = "kubenetes api"
-    from_port        = 6443
-    to_port          = 6443
-    protocol         = "tcp"
-    cidr_blocks      = [aws_subnet.public.cidr_block]
+    description = "kubenetes api"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.public.cidr_block]
   }
-  
+
   egress {
     from_port        = 0
     to_port          = 65535
@@ -64,7 +64,7 @@ resource "tls_private_key" "this" {
   }
 
   provisioner "local-exec" {
-    when = destroy
+    when    = destroy
     command = "rm -rf ~/.ssh/${var.shh_key_name}.pem"
   }
 }
