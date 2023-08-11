@@ -101,6 +101,8 @@ resource "aws_instance" "master" {
         wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-arm-v1.3.0.tgz
         mkdir -p /opt/cni/bin
         tar Cxzvf /opt/cni/bin cni-plugins-linux-arm-v1.3.0.tgz
+        mkdir -p /etc/containerd
+        containerd config default > /etc/containerd/config.toml
 		EOT
 }
 
@@ -129,5 +131,7 @@ resource "aws_instance" "worker" {
         wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-arm-v1.3.0.tgz
         mkdir -p /opt/cni/bin
         tar Cxzvf /opt/cni/bin cni-plugins-linux-arm-v1.3.0.tgz
+        mkdir -p /etc/containerd
+        containerd config default > /etc/containerd/config.toml
 		EOT
 }
