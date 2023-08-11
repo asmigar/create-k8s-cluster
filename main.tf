@@ -3,7 +3,7 @@ provider "aws" {
   profile = "default"
   default_tags {
     tags = {
-      Organisation = "Cloudtrain"
+      Organisation = "Asmigar"
       Environment  = "dev"
     }
   }
