@@ -107,7 +107,7 @@ resource "aws_instance" "master" {
 }
 
 resource "aws_instance" "worker" {
-  count         = 2
+  count         = var.workers
   ami           = "ami-0006abfd85caddf82"
   instance_type = "t4g.small"
 

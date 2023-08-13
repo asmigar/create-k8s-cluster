@@ -13,3 +13,9 @@ variable "shh_key_name" {
   default     = "k8s"
   description = "ssh key name to be created in EC2 and store in ~/.ssh folder"
 }
+
+variable "workers" {
+    type = number
+    default = 2
+    description = "number of worker nodes"
+}
