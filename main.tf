@@ -90,19 +90,23 @@ resource "aws_instance" "master" {
   key_name               = aws_key_pair.this.key_name
   user_data              = <<-EOT
 		#!/bin/bash
-        wget https://github.com/containerd/containerd/releases/download/v1.7.3/containerd-1.7.3-linux-arm64.tar.gz
-        tar Cxzvf /usr/local containerd-1.7.3-linux-arm64.tar.gz
-        wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service \
-        -O /usr/lib/systemd/system/containerd.service
-        systemctl daemon-reload
-        systemctl enable --now containerd
-        wget https://github.com/opencontainers/runc/releases/download/v1.1.8/runc.arm64
-        install -m 755 runc.arm64 /usr/local/sbin/runc
-        wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-arm-v1.3.0.tgz
-        mkdir -p /opt/cni/bin
-        tar Cxzvf /opt/cni/bin cni-plugins-linux-arm-v1.3.0.tgz
-        mkdir -p /etc/containerd
-        containerd config default > /etc/containerd/config.toml
+		wget https://github.com/containerd/containerd/releases/download/v1.7.3/containerd-1.7.3-linux-arm64.tar.gz
+		tar Cxzvf /usr/local containerd-1.7.3-linux-arm64.tar.gz
+		wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service \
+		-O /usr/lib/systemd/system/containerd.service
+		systemctl daemon-reload
+		systemctl enable --now containerd
+		wget https://github.com/opencontainers/runc/releases/download/v1.1.8/runc.arm64
+		install -m 755 runc.arm64 /usr/local/sbin/runc
+		wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-arm-v1.3.0.tgz
+		mkdir -p /opt/cni/bin
+		tar Cxzvf /opt/cni/bin cni-plugins-linux-arm-v1.3.0.tgz
+		mkdir -p /etc/containerd
+		containerd config default > /etc/containerd/config.toml
+		cat <<-K8SCONF | sudo tee /etc/modules-load.d/k8s.conf
+		overlay
+		br_netfilter
+		K8SCONF
 		EOT
 }
 
