@@ -150,18 +150,48 @@ resource "aws_instance" "worker" {
   key_name               = aws_key_pair.this.key_name
   user_data              = <<-EOT
 		#!/bin/bash
-        wget https://github.com/containerd/containerd/releases/download/v1.7.3/containerd-1.7.3-linux-arm64.tar.gz
-        tar Cxzvf /usr/local containerd-1.7.3-linux-arm64.tar.gz
-        wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service \
-        -O /usr/lib/systemd/system/containerd.service
-        systemctl daemon-reload
-        systemctl enable --now containerd
-        wget https://github.com/opencontainers/runc/releases/download/v1.1.8/runc.arm64
-        install -m 755 runc.arm64 /usr/local/sbin/runc
-        wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-arm-v1.3.0.tgz
-        mkdir -p /opt/cni/bin
-        tar Cxzvf /opt/cni/bin cni-plugins-linux-arm-v1.3.0.tgz
-        mkdir -p /etc/containerd
-        containerd config default > /etc/containerd/config.toml
+		swapoff -a
+		sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
+		wget https://github.com/containerd/containerd/releases/download/v1.7.3/containerd-1.7.3-linux-arm64.tar.gz
+		tar Cxzvf /usr/local containerd-1.7.3-linux-arm64.tar.gz
+		wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service \
+		-O /usr/lib/systemd/system/containerd.service
+		systemctl daemon-reload
+		systemctl enable --now containerd
+		wget https://github.com/opencontainers/runc/releases/download/v1.1.8/runc.arm64
+		install -m 755 runc.arm64 /usr/local/sbin/runc
+		wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-arm-v1.3.0.tgz
+		mkdir -p /opt/cni/bin
+		tar Cxzvf /opt/cni/bin cni-plugins-linux-arm-v1.3.0.tgz
+		mkdir -p /etc/containerd
+		containerd config default > /etc/containerd/config.toml
+		sed -i.bak 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+		sed -i.bak 's/sandbox_image = "registry.k8s.io\/pause:3.8"/sandbox_image = "registry.k8s.io\/pause:3.9"/' /etc/containerd/config.toml
+		systemctl restart containerd
+		cat <<-K8SCONF | sudo tee /etc/modules-load.d/k8s.conf
+		overlay
+		br_netfilter
+		K8SCONF
+		modprobe overlay
+		modprobe br_netfilter
+		cat <<SYSCTLK8SCONF | sudo tee /etc/sysctl.d/k8s.conf
+		net.bridge.bridge-nf-call-iptables  = 1
+		net.bridge.bridge-nf-call-ip6tables = 1
+		net.ipv4.ip_forward                 = 1
+		SYSCTLK8SCONF
+		sysctl --system
+		cat <<K8SREPO | sudo tee /etc/yum.repos.d/kubernetes.repo
+		[kubernetes]
+		name=Kubernetes
+		baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+		enabled=1
+		gpgcheck=1
+		gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+		exclude=kubelet kubeadm kubectl
+		K8SREPO
+		setenforce 0
+		sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+		yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+		systemctl enable --now kubelet
 		EOT
 }
