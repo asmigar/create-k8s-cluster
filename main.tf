@@ -134,8 +134,7 @@ resource "aws_instance" "master" {
 		yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 		systemctl enable --now kubelet
 		kubeadm init --pod-network-cidr 192.168.0.0/16
-		curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml -O
-		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f calico.yaml
+		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
 		EOT
 }
 
