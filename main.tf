@@ -1,94 +1,94 @@
 provider "aws" {
-  region  = "us-east-1"
-  profile = "default"
-  default_tags {
-    tags = {
-      Organisation = "Asmigar"
-      Environment  = "dev"
-    }
-  }
+	region  = "us-east-1"
+	profile = "default"
+	default_tags {
+		tags = {
+			Organisation = "Asmigar"
+			Environment  = "dev"
+		}
+	}
 }
 
 data "http" "my_public_ip" {
-  url = "https://ifconfig.me"
+	url = "https://ifconfig.me"
 }
 
 resource "aws_security_group" "allow_ssh" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic"
-  vpc_id      = aws_vpc.main.id
+	name        = "allow_tls"
+	description = "Allow TLS inbound traffic"
+	vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description = "ssh"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${data.http.my_public_ip.response_body}/32"]
-  }
+	ingress {
+		description = "ssh"
+		from_port   = 22
+		to_port     = 22
+		protocol    = "tcp"
+		cidr_blocks = ["${data.http.my_public_ip.response_body}/32"]
+	}
 
-  ingress {
-    description = "kubelet api"
-    from_port   = 10250
-    to_port     = 10250
-    protocol    = "tcp"
-    cidr_blocks = [aws_subnet.public.cidr_block]
-  }
+	ingress {
+		description = "kubelet api"
+		from_port   = 10250
+		to_port     = 10250
+		protocol    = "tcp"
+		cidr_blocks = [aws_subnet.public.cidr_block]
+	}
 
-  ingress {
-    description = "kubenetes api"
-    from_port   = 6443
-    to_port     = 6443
-    protocol    = "tcp"
-    cidr_blocks = [aws_subnet.public.cidr_block]
-  }
+	ingress {
+		description = "kubenetes api"
+		from_port   = 6443
+		to_port     = 6443
+		protocol    = "tcp"
+		cidr_blocks = [aws_subnet.public.cidr_block]
+	}
 
-  egress {
-    from_port        = 0
-    to_port          = 65535
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+	egress {
+		from_port        = 0
+		to_port          = 65535
+		protocol         = "tcp"
+		cidr_blocks      = ["0.0.0.0/0"]
+		ipv6_cidr_blocks = ["::/0"]
 
-  }
+	}
 
-  tags = {
-    Name = "allow_ssh"
-  }
+	tags = {
+		Name = "allow_ssh"
+	}
 }
 
 
 
 resource "tls_private_key" "this" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
+	algorithm = "RSA"
+	rsa_bits  = 4096
 }
 
 resource "aws_key_pair" "this" {
-  key_name   = var.shh_key_name
-  public_key = tls_private_key.this.public_key_openssh
+	key_name   = var.shh_key_name
+	public_key = tls_private_key.this.public_key_openssh
 
-  provisioner "local-exec" {
-    command = "echo '${tls_private_key.this.private_key_openssh}' > ~/.ssh/${var.shh_key_name}.pem; chmod 400 ~/.ssh/${self.key_name}.pem"
-  }
+	provisioner "local-exec" {
+		command = "echo '${tls_private_key.this.private_key_openssh}' > ~/.ssh/${var.shh_key_name}.pem; chmod 400 ~/.ssh/${self.key_name}.pem"
+	}
 
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -rf ~/.ssh/${self.key_name}.pem"
-  }
+	provisioner "local-exec" {
+		when    = destroy
+		command = "rm -rf ~/.ssh/${self.key_name}.pem"
+	}
 }
 
 resource "aws_instance" "master" {
-  ami           = "ami-0006abfd85caddf82"
-  instance_type = "t4g.small"
+	ami           = "ami-0006abfd85caddf82"
+	instance_type = "t4g.small"
 
-  tags = {
-    Name = "master"
-  }
+	tags = {
+		Name = "master"
+	}
 
-  vpc_security_group_ids = [aws_security_group.allow_ssh.id]
-  subnet_id              = aws_subnet.public.id
-  key_name               = aws_key_pair.this.key_name
-  user_data              = <<-EOT
+	vpc_security_group_ids = [aws_security_group.allow_ssh.id]
+	subnet_id              = aws_subnet.public.id
+	key_name               = aws_key_pair.this.key_name
+	user_data              = <<-EOT
 		#!/bin/bash
 		swapoff -a
 		sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
@@ -133,6 +133,9 @@ resource "aws_instance" "master" {
 		sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 		yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 		systemctl enable --now kubelet
+		kubeadm init --pod-network-cidr 192.168.0.0/16
+		curl https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml -O
+		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f calico.yaml
 		EOT
 }
 
