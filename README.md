@@ -16,7 +16,7 @@ This will output
 3. Ssh into the k8s master node(ssh command details available in terraform apply output from step 2) 
 4. [**Run on Manager Node**] Get the join-token and ca cert hash:
 ```bash
-$ kubeadm token list
+kubeadm token list
 openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
    openssl dgst -sha256 -hex | sed 's/^.* //'
 ```
