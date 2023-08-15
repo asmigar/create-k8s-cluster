@@ -8,10 +8,10 @@
 ```bash
 terraform init; terraform apply
 ```
-	This will create one k8s master/control-plane node along with two worker nodes.  
+This will create one k8s master/control-plane node along with two worker nodes.  
 
-	This will output
-	* ssh commands to access the swarm nodes.
+This will output
+* ssh commands to access the swarm nodes.
 
 3. Ssh into the k8s master node(ssh command details available in terraform apply output from step 2) 
 4. [**Run on Manager Node**] Get the join-token and ca cert hash:
