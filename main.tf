@@ -135,6 +135,7 @@ resource "aws_instance" "master" {
 		systemctl enable --now kubelet
 		kubeadm init --pod-network-cidr 192.168.0.0/16
 		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
+		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 		EOT
 }
 
