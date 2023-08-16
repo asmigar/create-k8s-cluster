@@ -10,7 +10,7 @@ provider "aws" {
 }
 
 data "http" "my_public_ip" {
-	url = "https://ifconfig.me"
+	url = "https://ipv4.icanhazip.com"
 }
 
 resource "aws_security_group" "allow_ssh" {
@@ -23,7 +23,7 @@ resource "aws_security_group" "allow_ssh" {
 		from_port   = 22
 		to_port     = 22
 		protocol    = "tcp"
-		cidr_blocks = ["${data.http.my_public_ip.response_body}/32"]
+		cidr_blocks = ["${chomp(data.http.my_public_ip.response_body)}/32"]
 	}
 
 	ingress {
