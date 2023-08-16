@@ -138,6 +138,10 @@ resource "aws_instance" "master" {
 		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
 		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 		kubectl --kubeconfig='/etc/kubernetes/admin.conf' patch deploy metrics-server --type='json' -n kube-system -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/0","value":"--kubelet-insecure-tls"}]'
+		echo "kubeadm join \
+		--token $(kubeadm token list -o jsonpath={.token}) \
+		$(hostname -i):6443 \
+		--discovery-token-ca-cert-hash sha256:$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')" > /tmp/kubeadm_join_command
 		mkdir -p /home/ec2-user/.kube
 		cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
 		chown ec2-user:ec2-user /home/ec2-user/.kube/config
