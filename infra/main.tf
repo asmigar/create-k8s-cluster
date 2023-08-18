@@ -42,6 +42,14 @@ resource "aws_security_group" "allow_ssh" {
 		cidr_blocks = [aws_subnet.public.cidr_block]
 	}
 
+	ingress {
+		description = "calico networking"
+		from_port   = 179
+		to_port     = 179
+		protocol    = "tcp"
+		cidr_blocks = [aws_subnet.public.cidr_block]
+	}
+
 	egress {
 		from_port        = 0
 		to_port          = 65535
