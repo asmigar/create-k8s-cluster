@@ -27,6 +27,15 @@ resource "aws_security_group" "allow_ssh" {
 	}
 
 	ingress {
+		description = "nginx web page"
+		from_port   = 80
+		to_port     = 80
+		protocol    = "tcp"
+		cidr_blocks = ["0.0.0.0/0"]
+	}
+
+
+	ingress {
 		description = "kubelet api"
 		from_port   = 10250
 		to_port     = 10250
