@@ -1,1 +1,1 @@
-workers = 6
+workers = 2
