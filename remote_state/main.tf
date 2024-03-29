@@ -11,7 +11,7 @@ provider "aws" {
 
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "create-k8s-terraform-state"
+  bucket = "${var.organisation}-create-k8s-terraform-state"
 
   # Prevent accidental deletion of this S3 bucket
   lifecycle {
