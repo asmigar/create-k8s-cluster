@@ -131,11 +131,11 @@ resource "aws_instance" "master" {
 		cat <<K8SREPO | sudo tee /etc/yum.repos.d/kubernetes.repo
 		[kubernetes]
 		name=Kubernetes
-		baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+		baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
 		enabled=1
 		gpgcheck=1
-		gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-		exclude=kubelet kubeadm kubectl
+		gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+		exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
 		K8SREPO
 		setenforce 0
 		sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
@@ -203,11 +203,11 @@ resource "aws_instance" "worker" {
 		cat <<K8SREPO | sudo tee /etc/yum.repos.d/kubernetes.repo
 		[kubernetes]
 		name=Kubernetes
-		baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+		baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
 		enabled=1
 		gpgcheck=1
-		gpgkey=https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-		exclude=kubelet kubeadm kubectl
+		gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+		exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
 		K8SREPO
 		setenforce 0
 		sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
