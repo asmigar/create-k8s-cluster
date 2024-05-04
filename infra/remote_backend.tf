@@ -5,6 +5,6 @@ terraform {
     region         = "us-east-1"
     dynamodb_table = "create-k8s-state-locks"
     encrypt        = true
-    profile        = "default"
+    profile        = "asmigar"
   }
 }
