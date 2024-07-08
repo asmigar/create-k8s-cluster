@@ -19,3 +19,9 @@ variable "workers" {
     default = 2
     description = "number of worker nodes"
 }
+
+variable "env" {
+  type = string
+  default = "dev"
+  description = "The environment to be used"
+}

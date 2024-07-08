@@ -4,7 +4,7 @@ provider "aws" {
 	default_tags {
 		tags = {
 			Organisation = "Asmigar"
-			Environment  = "dev"
+			Environment  = var.env
 		}
 	}
 }
