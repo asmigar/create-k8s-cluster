@@ -10,7 +10,7 @@ variable "public_subnet_cidr_block" {
 
 variable "shh_key_name" {
   type        = string
-  default     = "k8s"
+  default     = "k8s-new"
   description = "ssh key name to be created in EC2 and store in ~/.ssh folder"
 }
 
