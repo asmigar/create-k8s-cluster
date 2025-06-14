@@ -28,3 +28,6 @@ openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outfor
 ```bash
 kubeadm join --token <token> <control-plane-host>:6443 --discovery-token-ca-cert-hash sha256:<hash>
 ```
+
+## TODO 
+- Get rid of huge shell scripts. Create ansible scripts for installing/setting Kubernetes on instances. 
