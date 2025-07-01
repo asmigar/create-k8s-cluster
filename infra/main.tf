@@ -71,6 +71,19 @@ resource "tls_private_key" "this" {
 	rsa_bits  = 4096
 }
 
+resource "aws_secretsmanager_secret" "ssh_key" {
+	name = "${var.ssh_key_name}_ssh.pem"
+
+	lifecycle {
+		prevent_destroy = true
+	}
+}
+
+resource "aws_secretsmanager_secret_version" "ssh_key" {
+	secret_id     = aws_secretsmanager_secret.ssh_key.id
+	secret_string = tls_private_key.this.private_key_openssh
+}
+
 resource "aws_key_pair" "this" {
 	key_name   = var.ssh_key_name
 	public_key = tls_private_key.this.public_key_openssh
@@ -98,7 +111,6 @@ resource "aws_instance" "master" {
 	key_name               = aws_key_pair.this.key_name
 	user_data              = <<-EOT
 		#!/bin/bash
-
 		#disable swap https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#swap-configuration
 		swapoff -a
 		sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
@@ -165,6 +177,10 @@ resource "aws_instance" "master" {
 		cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
 		chown ec2-user:ec2-user /home/ec2-user/.kube/config
 		EOT
+
+	lifecycle {
+		replace_triggered_by = [ aws_key_pair.this ]
+	}
 }
 
 resource "aws_instance" "worker" {
@@ -225,4 +241,8 @@ resource "aws_instance" "worker" {
 		yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
 		systemctl enable --now kubelet
 		EOT
+
+	lifecycle {
+		replace_triggered_by = [ aws_key_pair.this ]
+	}
 }
