@@ -112,7 +112,6 @@ resource "aws_instance" "master" {
 	user_data              = <<-EOT
 		#!/bin/bash
 		#disable swap https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#swap-configuration
-		swapoff -a
 		sed -i.bak -r 's/(.+ swap .+)/#\1/' /etc/fstab
 
 		#install containerd https://github.com/containerd/containerd/blob/main/docs/getting-started.md
@@ -245,4 +244,9 @@ resource "aws_instance" "worker" {
 	lifecycle {
 		replace_triggered_by = [ aws_key_pair.this ]
 	}
+}
+
+resource "local_file" "inventory" {
+	filename = "${path.root}/provisioning/inventory.ini"
+	content = templatefile("${path.module}/inventory.tftpl", { master_public_dns = aws_instance.master.public_dns , workers_public_dns = aws_instance.worker[*].public_dns , key_name = var.ssh_key_name } )
 }
