@@ -109,46 +109,6 @@ resource "aws_instance" "master" {
 	vpc_security_group_ids = [aws_security_group.allow_ssh.id]
 	subnet_id              = aws_subnet.public.id
 	key_name               = aws_key_pair.this.key_name
-	user_data              = <<-EOT
-		#!/bin/bash
-		cat <<-K8SCONF | sudo tee /etc/modules-load.d/k8s.conf
-		overlay
-		br_netfilter
-		K8SCONF
-		modprobe overlay
-		modprobe br_netfilter
-		cat <<SYSCTLK8SCONF | sudo tee /etc/sysctl.d/k8s.conf
-		net.bridge.bridge-nf-call-iptables  = 1
-		net.bridge.bridge-nf-call-ip6tables = 1
-		net.ipv4.ip_forward                 = 1
-		SYSCTLK8SCONF
-		sysctl --system
-		cat <<K8SREPO | sudo tee /etc/yum.repos.d/kubernetes.repo
-		[kubernetes]
-		name=Kubernetes
-		baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
-		enabled=1
-		gpgcheck=1
-		gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
-		exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
-		K8SREPO
-		setenforce 0
-		sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
-		yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
-		systemctl enable --now kubelet
-		kubeadm init --pod-network-cidr 192.168.0.0/16
-		kubectl --kubeconfig='/etc/kubernetes/admin.conf' taint nodes --all node-role.kubernetes.io/control-plane-
-		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
-		kubectl --kubeconfig='/etc/kubernetes/admin.conf' apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-		kubectl --kubeconfig='/etc/kubernetes/admin.conf' patch deploy metrics-server --type='json' -n kube-system -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/0","value":"--kubelet-insecure-tls"}]'
-		echo "kubeadm join \
-		--token $(kubeadm token list -o jsonpath={.token}) \
-		$(hostname -i):6443 \
-		--discovery-token-ca-cert-hash sha256:$(openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //')" > /tmp/kubeadm_join_command
-		mkdir -p /home/ec2-user/.kube
-		cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
-		chown ec2-user:ec2-user /home/ec2-user/.kube/config
-		EOT
 
 	lifecycle {
 		replace_triggered_by = [ aws_key_pair.this ]

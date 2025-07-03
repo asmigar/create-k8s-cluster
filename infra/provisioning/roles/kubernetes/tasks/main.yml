@@ -1,0 +1,99 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for kubernetes
+- name: Load kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+    persistent: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Set sysctl entries
+  sysctl:
+    name: "{{ item }}"
+    value: '1'
+    state: present
+    sysctl_file: /etc/sysctl.d/k8s.conf
+  loop:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.ipv4.ip_forward
+
+
+- name: Add kubernetes repository
+  ansible.builtin.yum_repository:
+    name: Kubernetes
+    description: kubernetes
+    baseurl: https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
+    gpgkey: https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+    gpgcheck: true
+    enabled: true
+    exclude: kubelet kubeadm kubectl cri-tools kubernetes-cni
+
+- name: Put SELinux in permissive mode
+  ansible.posix.selinux:
+    state: permissive
+    policy: targeted
+
+- name: install kubernetes
+  dnf:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+      - python3-pip
+      - python3-wheel
+    disable_excludes: Kubernetes
+
+- name: Install Kubernetes python library
+  pip:
+    name: kubernetes
+
+- name: Enable kubelet
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes
+
+- name: Create kubernetes cluster
+  shell: kubeadm init --pod-network-cidr 192.168.0.0/16
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Install cni and metric server plugins
+  k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    state: present
+    src: "{{ item }}"
+  loop:
+    - https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
+    - https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+- name: Patch metric server to allow insecure tls
+  kubernetes.core.k8s_json_patch:
+    kubeconfig: /etc/kubernetes/admin.conf
+    kind: Deployment
+    name: metrics-server
+    namespace: kube-system
+    patch:
+      - op: add
+        path: /spec/template/spec/containers/0/args/0
+        value: --kubelet-insecure-tls
+
+# TODO: Make the patch idempotent for the subsequent metric server installation
+
+- name: Create kubeconfig directory for ec2 user
+  file:
+    path: /home/ec2-user/.kube
+    state: directory
+
+- name: Setup kubeconfig for ec2-user
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ec2-user/.kube/config
+    remote_src: true
+    owner: ec2-user
+    group: ec2-user
+
