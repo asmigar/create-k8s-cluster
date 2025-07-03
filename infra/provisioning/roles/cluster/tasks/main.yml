@@ -1,0 +1,43 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for cluster
+- name: Create kubernetes cluster
+  shell: kubeadm init --pod-network-cidr 192.168.0.0/16
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+- name: Install cni and metric server plugins
+  k8s:
+    kubeconfig: /etc/kubernetes/admin.conf
+    state: present
+    src: "{{ item }}"
+  loop:
+    - https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
+    - https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+- name: Patch metric server to allow insecure tls
+  kubernetes.core.k8s_json_patch:
+    kubeconfig: /etc/kubernetes/admin.conf
+    kind: Deployment
+    name: metrics-server
+    namespace: kube-system
+    patch:
+      - op: add
+        path: /spec/template/spec/containers/0/args/0
+        value: --kubelet-insecure-tls
+
+# TODO: Make the patch idempotent for the subsequent metric server installation
+
+- name: Create kubeconfig directory for ec2 user
+  file:
+    path: /home/ec2-user/.kube
+    state: directory
+
+- name: Setup kubeconfig for ec2-user
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ec2-user/.kube/config
+    remote_src: true
+    owner: ec2-user
+    group: ec2-user
+
