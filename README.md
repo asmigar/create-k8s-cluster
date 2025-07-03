@@ -29,22 +29,3 @@ cd infra; terraform init; terraform apply --auto-approve
 ```bash
 cd infra/provisioning; ansible-playbook playbook.yml -i inventory.ini 
 ```
-
-2. Ssh into the k8s master node(ssh command details available in terraform apply output from step 2) 
-3. [**Run on Manager Node**] Get the join-token and ca cert hash:
-```bash
-kubeadm token list
-openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
-   openssl dgst -sha256 -hex | sed 's/^.* //'
-```
-
-4. Copy the token and cert sha.
-
-5. Ssh into worker nodes(_ssh command details available in terraform apply output from step 2_) 
-6. [**Run on all workers nodes**]Run join token command along with token&hash(_copied from step 4_). `control-plane-host` is the private ip of the master node.
-```bash
-kubeadm join --token <token> <control-plane-host>:6443 --discovery-token-ca-cert-hash sha256:<hash>
-```
-
-## TODO 
-- Get rid of huge shell scripts. Create ansible scripts for installing/setting Kubernetes on instances. 
