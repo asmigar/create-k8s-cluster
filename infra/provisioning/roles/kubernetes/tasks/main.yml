@@ -56,3 +56,11 @@
     name: kubelet
     state: started
     enabled: yes
+
+- name: Setup kubernetes masters
+  import_tasks: cluster.yml
+  when: inventory_hostname in groups.masters
+
+- name: Setup kubernetes workers
+  import_tasks: worker.yml
+  when: inventory_hostname in groups.workers

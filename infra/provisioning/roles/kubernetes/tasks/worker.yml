@@ -1,0 +1,8 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for worker
+- name: Join cluster
+  shell: "kubeadm join --token {{ cluster_join_token.stdout }} {{ hostvars[groups.masters[0]]['ansible_default_ipv4']['address'] }}:6443 --discovery-token-ca-cert-hash sha256:{{ cluster_cert_sha.stdout }}"
+  args:
+    creates: /etc/kubernetes/kubelet.conf
+

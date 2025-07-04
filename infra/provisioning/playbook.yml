@@ -1,15 +1,7 @@
 ---
-- hosts: masters
+- hosts: all
 #not setting swappiness as swap is disable by default on EC2 root volumes
 
   roles:
-    - role: cluster
+    - role: kubernetes
       become: yes
-
-
-- hosts: workers
-
-  roles:
-    - role: worker
-      become: yes
-
