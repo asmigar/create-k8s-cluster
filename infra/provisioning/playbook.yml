@@ -3,10 +3,6 @@
 #not setting swappiness as swap is disable by default on EC2 root volumes
 
   roles:
-    - role: containerd
-      become: yes
-    - role: kubernetes
-      become: yes
     - role: cluster
       become: yes
 
@@ -14,9 +10,6 @@
 - hosts: workers
 
   roles:
-    - role: containerd
-      become: yes
-    - role: kubernetes
-      become: yes
     - role: worker
+      become: yes
 

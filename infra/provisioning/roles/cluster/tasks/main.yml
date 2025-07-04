@@ -6,7 +6,7 @@
   args:
     creates: /etc/kubernetes/admin.conf
 
-- name: Install cni and metric server plugins
+- name: Install pod network and metric server addons
   k8s:
     kubeconfig: /etc/kubernetes/admin.conf
     state: present

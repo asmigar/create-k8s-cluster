@@ -1,13 +1,13 @@
 ## Pre-requisite
 - Install [terraform v1.5.5](https://www.terraform.io/downloads.html)
-- Setup the [aws cli credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with `default` profile name.
+- Setup the [aws cli credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with `asmigar` profile name.
 
 
 ## Create Remote State
 Terraform keeps all the info about the resources in a state file. Rather than keeping it on local disk, we store it on S3 bucket.
 To learn more read the docs [here](https://developer.hashicorp.com/terraform/language/settings/backends/s3).
 
-Run below terraform command to create remote state bucket on your AWS account. This will also prompt for your aws cli user mentioned in [Pre-requisties](#pre-requisites)
+Run below terraform command to create remote state bucket on your AWS account. 
 ```bash
 cd remote_state; terraform init; terraform apply --auto-approve
 ```
