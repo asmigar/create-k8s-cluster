@@ -29,3 +29,6 @@ cd infra; terraform init; terraform apply --auto-approve
 ```bash
 cd infra/provisioning; ansible-playbook playbook.yml -i inventory.ini 
 ```
+
+# TODO
+- [ ] Create certs for kubelet so we don't need to patch metric server to allow for insecure tls. More details [here](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-tls-bootstrapping/#certificate-rotation).
