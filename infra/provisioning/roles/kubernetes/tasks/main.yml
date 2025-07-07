@@ -26,8 +26,8 @@
   ansible.builtin.yum_repository:
     name: Kubernetes
     description: kubernetes
-    baseurl: https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
-    gpgkey: https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+    baseurl: https://pkgs.k8s.io/core:/stable:/v1.33/rpm/
+    gpgkey: https://pkgs.k8s.io/core:/stable:/v1.33/rpm/repodata/repomd.xml.key
     gpgcheck: true
     enabled: true
     exclude: kubelet kubeadm kubectl cri-tools kubernetes-cni
@@ -46,6 +46,7 @@
       - python3-pip
       - python3-wheel
     disable_excludes: Kubernetes
+    state: latest
 
 - name: Install Kubernetes python library
   pip:

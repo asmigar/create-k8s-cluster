@@ -1,8 +1,13 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # tasks file for cluster
+- name: Copy kubeadm cluster conf
+  copy:
+    src: config.yaml
+    dest: /tmp/config.yaml
+
 - name: Create kubernetes cluster
-  shell: kubeadm init --pod-network-cidr 192.168.0.0/16
+  shell: kubeadm init --config /tmp/config.yaml
   args:
     creates: /etc/kubernetes/admin.conf
 
@@ -15,16 +20,16 @@
     - https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
     - https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
-- name: Patch metric server to allow insecure tls
-  kubernetes.core.k8s_json_patch:
-    kubeconfig: /etc/kubernetes/admin.conf
-    kind: Deployment
-    name: metrics-server
-    namespace: kube-system
-    patch:
-      - op: add
-        path: /spec/template/spec/containers/0/args/0
-        value: --kubelet-insecure-tls
+#- name: Patch metric server to allow insecure tls
+#  kubernetes.core.k8s_json_patch:
+#    kubeconfig: /etc/kubernetes/admin.conf
+#    kind: Deployment
+#    name: metrics-server
+#    namespace: kube-system
+#    patch:
+#      - op: add
+#        path: /spec/template/spec/containers/0/args/0
+#        value: --kubelet-insecure-tls
 
 # TODO: Make the patch idempotent for the subsequent metric server installation
 
