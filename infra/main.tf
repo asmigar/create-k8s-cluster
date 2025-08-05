@@ -71,19 +71,6 @@ resource "tls_private_key" "this" {
 	rsa_bits  = 4096
 }
 
-resource "aws_secretsmanager_secret" "ssh_key" {
-	name = "${var.ssh_key_name}_ssh.pem"
-
-	lifecycle {
-		prevent_destroy = true
-	}
-}
-
-resource "aws_secretsmanager_secret_version" "ssh_key" {
-	secret_id     = aws_secretsmanager_secret.ssh_key.id
-	secret_string = tls_private_key.this.private_key_openssh
-}
-
 resource "aws_key_pair" "this" {
 	key_name   = var.ssh_key_name
 	public_key = tls_private_key.this.public_key_openssh
