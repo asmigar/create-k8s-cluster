@@ -87,16 +87,14 @@ resource "aws_secretsmanager_secret_version" "ssh_key" {
 resource "aws_key_pair" "this" {
 	key_name   = var.ssh_key_name
 	public_key = tls_private_key.this.public_key_openssh
-
-	provisioner "local-exec" {
-		command = "echo '${tls_private_key.this.private_key_openssh}' > ~/.ssh/${var.ssh_key_name}.pem; chmod 400 ~/.ssh/${self.key_name}.pem"
-	}
-
-	provisioner "local-exec" {
-		when    = destroy
-		command = "rm -rf ~/.ssh/${self.key_name}.pem"
-	}
 }
+
+resource "local_sensitive_file" "ssh_private_key" {
+	content         = tls_private_key.this.private_key_openssh
+	filename        = pathexpand("~/.ssh/${aws_key_pair.this.key_name}.pem")
+	file_permission = "0400"
+}
+
 
 resource "aws_instance" "master" {
 	ami           = "ami-0006abfd85caddf82"
