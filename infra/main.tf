@@ -95,9 +95,29 @@ resource "local_sensitive_file" "ssh_private_key" {
 	file_permission = "0400"
 }
 
+data "aws_ami" "amazon_linux_2023" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+		name   = "name"
+		values = ["al2023-ami-*"]
+	}
+
+	filter {
+		name   = "virtualization-type"
+		values = ["hvm"]
+	}
+
+	filter {
+		name   = "architecture"
+		values = ["arm64"]
+	}
+}
+
 
 resource "aws_instance" "master" {
-	ami           = "ami-0006abfd85caddf82"
+	ami           = data.aws_ami.amazon_linux_2023.id
 	instance_type = "t4g.small"
 
 	tags = {
@@ -115,7 +135,7 @@ resource "aws_instance" "master" {
 
 resource "aws_instance" "worker" {
   count         = var.workers
-  ami           = "ami-0006abfd85caddf82"
+  ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = "t4g.small"
 
   tags = {
